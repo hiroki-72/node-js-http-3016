@@ -1,9 +1,24 @@
 'use strict';
 const http = require('node:http');
 const pug = require('pug');
+const auth = require('http-auth');
+const basic = auth.basic(
+  { realm: 'Enquetes Area.' },
+  (username, password, callbank) => {
+    callbank(username === 'guest' && password === 'xaXZJQmE');
+  }
+);
 const server = http
-  .createServer((req, res) => {
+  .createServer(basic.check((req, res) => {
     console.info(`Requested by ${req.socket.remoteAddress}`);
+    
+    if (req.url === '/logout'){
+      res.writeHead(401,{
+        'Content-Type': 'text/plain; charset=utf-8'
+      });
+      res.end('ログアウトしました。再ログインが必要です');
+      return;
+    }
     res.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8'
     });
@@ -68,7 +83,7 @@ const server = http
       default:
         break;
     }
-  })
+  }))
   .on('error', e => {
     console.error('Server Error', e);
   })
